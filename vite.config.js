@@ -4,7 +4,9 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
-  base: './',  // 重要：使用相对路径
+  base: process.env.NODE_ENV === 'production' 
+    ? '/Smart-canteen-mobile/'  // 改为你的 GitHub 仓库名
+    : '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
