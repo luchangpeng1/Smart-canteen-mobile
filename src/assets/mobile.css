@@ -1,0 +1,58 @@
+/* 移动端全局样式 */
+.mobile {
+  /* 基础字体大小 */
+  font-size: 14px;
+  
+  /* 触摸优化 */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+/* 移动端表格优化 */
+.mobile .el-table {
+  font-size: 12px;
+}
+
+.mobile .el-table th {
+  padding: 8px 0;
+}
+
+.mobile .el-table td {
+  padding: 6px 0;
+}
+
+/* 移动端表单优化 */
+.mobile .el-form-item {
+  margin-bottom: 12px;
+}
+
+.mobile .el-form-item__label {
+  padding: 0 0 4px;
+  line-height: 1.4;
+}
+
+/* 移动端按钮优化 */
+.mobile .el-button {
+  padding: 8px 15px;
+}
+
+.mobile .el-button--small {
+  padding: 6px 12px;
+}
+
+/* 移动端弹窗优化 */
+.mobile .el-dialog {
+  width: 90% !important;
+  margin: 5vh auto !important;
+}
+
+/* 移动端下拉菜单优化 */
+.mobile .el-select-dropdown {
+  max-width: 90vw;
+}
+
+/* 移动端日期选择器优化 */
+.mobile .el-date-picker,
+.mobile .el-time-picker {
+  width: 100% !important;
+} 
