@@ -79,7 +79,7 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   
   // 需要登录但未登录，重定向到登录页
@@ -94,6 +94,12 @@ router.beforeEach((to, from, next) => {
   // 已登录用户访问登录页，重定向到首页
   if (to.path === '/login' && token) {
     next('/m/admin/orders')
+    return
+  }
+
+  // 根路径重定向到登录页
+  if (to.path === '/' && !token) {
+    next('/login')
     return
   }
 

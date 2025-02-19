@@ -5,7 +5,7 @@ import path from 'path'
 export default defineConfig({
   plugins: [vue()],
   base: process.env.NODE_ENV === 'production' 
-    ? '/Smart-canteen-mobile/'  // 改为你的 GitHub 仓库名
+    ? '/Smart-canteen-mobile/'
     : '/',
   build: {
     outDir: 'dist',
@@ -25,5 +25,8 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, 'src')
     }
+  },
+  server: {
+    historyApiFallback: true
   }
 })
