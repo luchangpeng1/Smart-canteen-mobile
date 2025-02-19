@@ -796,6 +796,7 @@ const useTestAccount = () => {
 .code-input {
   display: flex;
   gap: 8px;
+  align-items: stretch;
 }
 
 .code-input .el-input {
@@ -807,6 +808,12 @@ const useTestAccount = () => {
   padding: 0;
   font-size: 12px;
   border-radius: 8px;
+  height: auto;
+  margin: 0;
+}
+
+.code-input :deep(.el-input__wrapper) {
+  height: 100%;
 }
 
 /* 二维码容器样式 */
