@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-# 发生错误时终止
+# 当发生错误时中止脚本
 set -e
 
 # 构建
@@ -16,7 +16,7 @@ git init
 git add -A
 git commit -m 'deploy'
 
-# 使用 HTTPS 地址
-git push -f https://github.com/luchangpeng1/canting.git main:gh-pages
+# 如果你要部署在 https://<USERNAME>.github.io/<REPO>
+git push -f git@github.com:luchangpeng1/Smart-canteen-mobile.git main:gh-pages
 
 cd - 

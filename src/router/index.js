@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { isMobile } from '@/utils/device'
 
 const routes = [
@@ -72,7 +72,10 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
+  base: process.env.NODE_ENV === 'production'
+    ? '/Smart-canteen-mobile/'
+    : '/',
   routes
 })
 
