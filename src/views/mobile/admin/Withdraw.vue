@@ -1,5 +1,12 @@
 <template>
   <div class="withdraw-container">
+    <div class="page-header">
+      <el-button class="back-button" link @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+      </el-button>
+      <span class="page-title">提现管理</span>
+    </div>
+
     <div class="balance-card">
       <div class="balance-info">
         <div class="balance-title">当前余额</div>
@@ -202,6 +209,7 @@ import { ref, reactive, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import { 
   ArrowRight, 
+  ArrowLeft,
   Money, 
   ChatDotRound, 
   CreditCard, 
@@ -452,14 +460,44 @@ const wechatQRCode = 'https://example.com/wechat-qr.png'
 const handleAmountInput = (value) => {
   form.amount = parseFloat(value) || ''
 }
+
+const handleBack = () => {
+  router.push('/m/admin/profile')
+}
 </script>
 
 <style scoped>
 .withdraw-container {
-  padding: 12px;
-  background: #f5f7fa;
+  padding: 0;
+  background: #f8f9fa;
   min-height: 100vh;
-  margin: -15px;
+}
+
+.page-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #fff;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.back-button {
+  font-size: 20px;
+  height: 44px;
+  color: #2c3e50;
+}
+
+.page-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #2c3e50;
+  flex: 1;
+  text-align: center;
+  margin-right: 40px;
 }
 
 .balance-card {
