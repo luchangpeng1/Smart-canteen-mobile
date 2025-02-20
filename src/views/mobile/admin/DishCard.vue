@@ -6,6 +6,7 @@
                     @click="$emit('update:selected', dish.id)">
                     <el-checkbox 
                         :model-value="selectedDishes.includes(dish.id)"
+                        :value="dish.id"
                         class="dish-checkbox">
                     </el-checkbox>
                 </div>

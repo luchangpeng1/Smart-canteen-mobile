@@ -1,45 +1,64 @@
-import { ref, computed, watch, onMounted, onUnmounted, onActivated, onDeactivated } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, onActivated, onDeactivated, nextTick } from 'vue'
 
 <template>
   <div class="mobile-admin-layout">
     <!-- 顶部导航栏，只在订单管理页面显示 -->
     <div class="header" v-if="isOrdersPage">
       <div class="window-info">
-        <div class="location-info">
-          <span class="canteen-name">{{ windowInfo.canteen.name }}</span>
-          <el-divider direction="vertical" />
-          <span class="floor-info">{{ windowInfo.floor }}层</span>
+        <!-- 餐厅位置信息和营业时间 -->
+        <div class="header-top">
+          <div class="location-info clickable" @click="handleEditLocation">
+            <el-icon><Location /></el-icon>
+            <span class="canteen-name">{{ windowInfo.canteen.name }}</span>
+            <el-divider direction="vertical" />
+            <span class="floor-info">{{ windowInfo.floor }}层</span>
+            <el-icon class="edit-icon"><Edit /></el-icon>
+          </div>
+          <div class="operation-time clickable" @click="handleEditTime">
+            <el-icon><Timer /></el-icon>
+            <span>{{ windowInfo.operatingHours }}</span>
+            <el-icon class="edit-icon"><Edit /></el-icon>
+          </div>
         </div>
-        <div class="window-detail">
-          <span class="window-name">{{ windowInfo.name }}</span>
-          <span class="operation-time">{{ windowInfo.operatingHours }}</span>
+        
+        <!-- 窗口名称和状态 -->
+        <div class="header-bottom">
+          <span class="window-name clickable" @click="handleEditName">
+            {{ windowInfo.name }}
+            <el-icon class="edit-icon"><Edit /></el-icon>
+          </span>
+          <div class="status-controls">
+            <el-tag size="small" :type="windowInfo.status === 'open' ? 'success' : 'danger'">
+              {{ windowInfo.status === 'open' ? '营业中' : '已打烊' }}
+            </el-tag>
+            <el-switch
+              v-model="windowStatus"
+              active-text="营业"
+              inactive-text="打烊"
+              @change="handleStatusChange"
+              class="status-switch"
+              :style="{
+                '--el-switch-on-color': '#07c160',
+                '--el-switch-off-color': 'rgba(0,0,0,0.25)'
+              }"
+            />
+            <el-dropdown @command="handleCommand" trigger="click">
+              <el-button size="small" type="primary" plain>
+                <el-icon><Setting /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="editWindow">
+                    <el-icon><Edit /></el-icon>编辑窗口
+                  </el-dropdown-item>
+                  <el-dropdown-item command="logout">
+                    <el-icon><SwitchButton /></el-icon>退出登录
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
-        <el-tag size="small" :type="windowInfo.status === 'open' ? 'success' : 'danger'">
-          {{ windowInfo.status === 'open' ? '营业中' : '已打烊' }}
-        </el-tag>
-      </div>
-      <div class="actions">
-        <el-dropdown @command="handleCommand" trigger="click">
-          <el-button size="small" type="primary" plain>
-            <el-icon><Setting /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="editWindow">
-                <el-icon><Edit /></el-icon>编辑窗口
-              </el-dropdown-item>
-              <el-dropdown-item command="logout">
-                <el-icon><SwitchButton /></el-icon>退出登录
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <el-switch
-          v-model="windowStatus"
-          active-text="营业"
-          inactive-text="打烊"
-          @change="handleStatusChange"
-        />
       </div>
     </div>
 
@@ -179,10 +198,10 @@ import { ref, computed, watch, onMounted, onUnmounted, onActivated, onDeactivate
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, onActivated, onDeactivated, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessageBox, ElMessage } from 'element-plus'
-import { Document, Menu as MenuIcon, TrendCharts, Setting, SwitchButton, Money, Edit, Plus, Delete } from '@element-plus/icons-vue'
+import { Document, Menu as MenuIcon, TrendCharts, Setting, SwitchButton, Money, Edit, Plus, Delete, Location, Timer } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -371,7 +390,7 @@ const editForm = ref({
   ]
 })
 
-// 添��窗口图片上传相关
+// 添加窗口图片上传相关
 const imageUrl = ref('')
 const handleImageSuccess = (response) => {
   imageUrl.value = response.url
@@ -486,6 +505,41 @@ watch(() => editForm.value.canteenId, (newVal) => {
 const isOrdersPage = computed(() => {
   return route.path === '/m/admin/orders'
 })
+
+// 添加编辑处理函数
+const handleEditLocation = () => {
+  editDialogVisible.value = true
+  // 使用 nextTick 确保对话框完全打开后再聚焦
+  nextTick(() => {
+    // 这里可以添加逻辑来聚焦餐厅选择框
+    const canteenSelect = document.querySelector('.window-edit-form .el-select')
+    if (canteenSelect) {
+      canteenSelect.click()
+    }
+  })
+}
+
+const handleEditName = () => {
+  editDialogVisible.value = true
+  nextTick(() => {
+    // 聚焦名称输入框
+    const nameInput = document.querySelector('.window-edit-form input[placeholder="请输入窗口名称"]')
+    if (nameInput) {
+      nameInput.focus()
+    }
+  })
+}
+
+const handleEditTime = () => {
+  editDialogVisible.value = true
+  nextTick(() => {
+    // 滚动到时间选择区域
+    const timeSection = document.querySelector('.time-periods-container')
+    if (timeSection) {
+      timeSection.scrollIntoView({ behavior: 'smooth' })
+    }
+  })
+}
 </script>
 
 <style scoped>
@@ -493,23 +547,24 @@ const isOrdersPage = computed(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f5f7fa;
+  background: #f8f9fa;
+  color: #2c3e50;
 }
 
 .header {
-  height: auto;
-  min-height: 60px;
-  padding: 10px 15px;
-  background: #fff;
+  min-height: 56px; /* 减小高度 */
+  padding: 12px 16px; /* 减小内边距 */
+  background: linear-gradient(135deg, #ffd000, #ffbb00);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
+  transition: all 0.3s ease;
 }
 
 .window-info {
@@ -518,60 +573,102 @@ const isOrdersPage = computed(() => {
   gap: 4px;
 }
 
-.location-info {
+.header-top {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  font-size: 12px;
-  color: #909399;
+  margin-bottom: 8px; /* 减小间距 */
 }
 
-.location-info .el-divider {
-  margin: 0 8px;
-  height: 12px;
+.header-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.canteen-name {
-  font-weight: 500;
-}
-
-.window-detail {
+.status-controls {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.location-info {
+  font-size: 12px; /* 减小字体 */
+  padding: 4px 10px; /* 减小内边距 */
+  display: flex;
+  align-items: center;
+  color: rgba(0,0,0,0.85);
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.location-info .el-icon {
+  margin-right: 4px;
+  font-size: 14px;
+  color: #e17b00;
+}
+
+.canteen-name {
+  font-weight: 600;
+  color: rgba(0,0,0,0.9);
+}
+
 .window-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #303133;
+  font-size: 18px; /* 稍微减小字体 */
+  padding: 2px 8px; /* 减小内边距 */
+  font-weight: 600;
+  color: rgba(0,0,0,0.95);
+  letter-spacing: -0.3px;
+  text-shadow: 0 1px 2px rgba(255,255,255,0.2);
+  border-radius: 8px;
 }
 
 .operation-time {
+  font-size: 12px; /* 减小字体 */
+  padding: 4px 10px; /* 减小内边距 */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(0,0,0,0.85);
+  background: rgba(255,255,255,0.95);
+  border-radius: 20px;
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  width: fit-content;
+}
+
+.operation-time .el-icon {
+  color: #e17b00;
+}
+
+/* Remove nested structure and keep only the flattened selectors */
+.status-switch :deep(.el-switch__label) {
+  color: rgba(0,0,0,0.65);
   font-size: 12px;
-  color: #909399;
-  background: #f5f7fa;
-  padding: 2px 6px;
-  border-radius: 4px;
+}
+
+.status-switch :deep(.el-switch__label.is-active) {
+  color: #e17b00;
 }
 
 .page-content {
   flex: 1;
   overflow-y: auto;
-  padding: 15px;
+  padding: 16px;
   padding-bottom: calc(70px + env(safe-area-inset-bottom, 0));
-  margin-top: 60px;
+  margin-top: 64px;
 }
 
-/* 当页面有顶部导航栏时添加上边距 */
 .page-content.has-header {
   padding-top: 80px;
 }
 
 .tabbar {
-  height: 50px;
+  height: 56px;
   display: flex;
   background: #fff;
-  box-shadow: 0 -1px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 -1px 4px rgba(0,0,0,0.02);
   position: fixed;
   bottom: 0;
   left: 0;
@@ -586,88 +683,120 @@ const isOrdersPage = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  color: #909399;
+  font-size: 11px;
+  color: rgba(0,0,0,0.65);
   cursor: pointer;
   position: relative;
+  transition: all 0.2s ease;
 }
 
 .tab-item.active {
-  color: #409EFF;
+  color: #e17b00;
+  font-weight: 500;
 }
 
 .tab-item .el-icon {
-  font-size: 20px;
+  font-size: 24px;
   margin-bottom: 2px;
+  transition: all 0.2s ease;
+}
+
+.tab-item:active {
+  opacity: 0.7;
 }
 
 .order-badge {
   position: absolute;
   top: 0;
-  right: 20%;
+  right: 22%;
+  transform: translate(50%, -30%);
+  background: #ff4d4f;
+  color: #fff;
+  font-size: 10px;
+  padding: 0 4px;
+  height: 16px;
+  min-width: 16px;
+  line-height: 16px;
+  text-align: center;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
-/* 页面切换动画 */
 .fade-enter-active,
 .fade-leave-active {
-  transition: opacity 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .fade-enter-from,
 .fade-leave-to {
   opacity: 0;
+  transform: translateY(10px);
 }
 
-/* 适配 iPhone 底部安全区域 */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .tabbar {
-    height: calc(50px + env(safe-area-inset-bottom));
+    height: calc(56px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
   }
   
-  .page-content {
-    padding-bottom: calc(70px + env(safe-area-inset-bottom));
+ .page-content {
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
   }
 }
 
 .actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 
-.el-dropdown {
-  margin-right: 8px;
+.actions :deep(.el-button) {
+  background: rgba(255,255,255,0.95);
+  border: none;
+  font-weight: 500;
+  color: rgba(0,0,0,0.85);
+}
+
+.actions :deep(.el-switch) {
+  --el-switch-on-color: #07c160;
+  --el-switch-off-color: rgba(0,0,0,0.25);
 }
 
 .window-image-uploader {
-  border: 1px dashed #d9d9d9;
-  border-radius: 8px;
+  border: 1px dashed rgba(0,0,0,0.15);
+  border-radius: 16px;
   cursor: pointer;
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 160px;
+  height: 180px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #fafafa;
+  background: #fff;
+  transition: all 0.3s ease;
 }
 
 .window-image-uploader:hover {
-  border-color: #409EFF;
-  background: #f5f7fa;
+  border-color: #ffa600;
+  background: #fffbf0;
 }
 
 .upload-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
-  color: #909399;
+  color: rgba(0,0,0,0.45);
+  transition: transform 0.2s ease;
+}
+
+.window-image-uploader:hover .upload-placeholder {
+  transform: scale(1.05);
+  color: #e17b00;
 }
 
 .window-uploader-icon {
-  font-size: 28px;
+  font-size: 32px;
   margin-bottom: 8px;
 }
 
@@ -675,6 +804,11 @@ const isOrdersPage = computed(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.window-image:hover {
+  transform: scale(1.02);
 }
 
 .full-width-input {
@@ -690,10 +824,17 @@ const isOrdersPage = computed(() => {
 .time-period {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: #f5f7fa;
-  padding: 12px;
-  border-radius: 8px;
+  gap: 10px;
+  background: #fff;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.time-period:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
 }
 
 .time-pickers {
@@ -708,17 +849,37 @@ const isOrdersPage = computed(() => {
   min-width: 0;
 }
 
+.time-picker :deep(.el-input__wrapper) {
+  background: #f8f9fa;
+}
+
 .time-separator {
-  color: #909399;
+  color: rgba(0,0,0,0.65);
   flex-shrink: 0;
+  font-weight: 500;
 }
 
 .delete-time-btn {
   flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.delete-time-btn:hover {
+  transform: scale(1.1);
+  color: #ff4d4f;
 }
 
 .add-time-btn {
   align-self: flex-start;
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  color: #e17b00;
+}
+
+.add-time-btn:hover {
+  background: #fff7e6;
+  color: #d17100;
 }
 
 .dialog-footer {
@@ -726,13 +887,26 @@ const isOrdersPage = computed(() => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding-top: 8px;
+  padding-top: 16px;
 }
 
 @media screen and (max-width: 480px) {
   .window-edit-dialog :deep(.el-dialog) {
     width: 92% !important;
     margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  
+  .window-edit-dialog :deep(.el-dialog__header) {
+    padding: 20px 20px 12px;
+    margin: 0;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .window-edit-dialog :deep(.el-dialog__title) {
+    font-weight: 600;
+    font-size: 16px;
   }
   
   .time-period {
@@ -756,14 +930,195 @@ const isOrdersPage = computed(() => {
     width: 100%;
     text-align: center;
     margin: 8px 0;
+    opacity: 0.7;
   }
 }
 
 .window-edit-dialog :deep(.el-dialog__body) {
-  padding: 20px 16px;
+  padding: 24px 20px;
 }
 
 .window-edit-form {
   margin: 0;
+}
+
+/* 全局组件样式优化 */
+:deep(.el-button) {
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+:deep(.el-button--primary) {
+  background: #e17b00;
+  border-color: #e17b00;
+  color: #fff;
+}
+
+:deep(.el-button--primary:hover) {
+  background: #d17100;
+  border-color: #d17100;
+  color: #fff;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-select),
+:deep(.el-time-picker) {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
+}
+
+:deep(.el-input__inner) {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+:deep(.el-input-number__decrease),
+:deep(.el-input-number__increase) {
+  color: #606266;
+  background-color: #f5f7fa;
+}
+
+:deep(.el-input-number__decrease:hover),
+:deep(.el-input-number__increase:hover) {
+  color: #e17b00;
+}
+
+:deep(.el-input-number__decrease.is-disabled),
+:deep(.el-input-number__increase.is-disabled) {
+  color: #c0c4cc;
+}
+
+:deep(.el-input__wrapper:hover),
+:deep(.el-select:hover),
+:deep(.el-time-picker:hover) {
+  box-shadow: 0 0 0 1px #e17b00 inset;
+}
+
+:deep(.el-input__wrapper.is-focus),
+:deep(.el-select.is-focus),
+:deep(.el-time-picker.is-focus) {
+  box-shadow: 0 0 0 1px #e17b00 inset !important;
+}
+
+:deep(.el-tag) {
+  border-radius: 4px;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 24px;
+  border: none;
+  font-weight: 500;
+}
+
+:deep(.el-tag--success) {
+  background: #f6ffed;
+  color: #389e0d;
+}
+
+:deep(.el-tag--danger) {
+  background: #fff1f0;
+  color: #cf1322;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: rgba(0,0,0,0.85);
+}
+
+:deep(.el-select-dropdown__item) {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+:deep(.el-select-dropdown__item.selected) {
+  color: #e17b00;
+  font-weight: 600;
+}
+
+:deep(.el-input-number__input) {
+  color: #2c3e50;
+  font-weight: 500;
+  text-align: center;
+}
+
+:deep(.el-dialog__title) {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+:deep(.el-message-box__title) {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+:deep(.el-message-box__content) {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+/* 滚动条美化 */
+.page-content::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.page-content::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 3px;
+}
+
+.page-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.clickable {
+  cursor: pointer;
+  position: relative;
+  padding-right: 24px;
+  transition: all 0.2s ease;
+}
+
+.clickable:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.edit-icon {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.clickable:hover .edit-icon {
+  opacity: 0.7;
+}
+
+.status-switch :deep(.el-switch__label) {
+  color: rgba(0,0,0,0.65);
+  font-size: 12px;
+}
+
+.status-switch :deep(.el-switch__label.is-active) {
+  color: #e17b00;
+}
+
+:deep(.el-dropdown-menu__item) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: rgba(0,0,0,0.85);
+}
+
+:deep(.el-dropdown-menu__item:hover) {
+  color: #e17b00;
+  background: #fff7e6;
+}
+
+:deep(.el-dropdown-menu__item .el-icon) {
+  margin-right: 4px;
+  font-size: 16px;
 }
 </style> 

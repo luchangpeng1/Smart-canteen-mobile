@@ -360,7 +360,7 @@ const handleImageUpdate = async ({ dishId, formData }) => {
     }
 }
 
-// 文���上传相关的响应式变量
+// 文本上传相关的响应式变量
 const menuFileInput = ref(null)
 const showUploadDialog = ref(false)
 const previewData = ref([])
@@ -467,7 +467,7 @@ const cancelUpload = () => {
 
 // 提交上传
 const submitUpload = async () => {
-    // ��证数据
+    // 验证数据
     const invalidItems = previewData.value.filter(item =>
         !item.name || !item.category || item.price <= 0
     )
@@ -527,6 +527,7 @@ const submitUpload = async () => {
     display: flex;
     flex-direction: column;
     margin-top: -15px;
+    color: #2c3e50;
 }
 
 .mobile-menu {
@@ -547,13 +548,29 @@ const submitUpload = async () => {
 }
 
 .page-title {
-    font-size: 16px;
+    font-size: 18px;
+    font-weight: 600;
     margin: 0;
+    color: #1a1a1a;
+}
+
+.header-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.header-actions :deep(.el-button) {
+    font-weight: 500;
 }
 
 .date-picker {
     margin-bottom: 4px;
     padding: 0 2px;
+}
+
+.date-picker :deep(.el-input__inner) {
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 .category-tags {
@@ -562,6 +579,18 @@ const submitUpload = async () => {
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
     padding-bottom: 1px;
+}
+
+.category-tags :deep(.el-radio-button__inner) {
+    color: #606266;
+    font-weight: 500;
+}
+
+.category-tags :deep(.el-radio-button__original-radio:checked + .el-radio-button__inner) {
+    color: #fff;
+    font-weight: 600;
+    background: #e17b00;
+    border-color: #e17b00;
 }
 
 .dishes-grid {
@@ -617,6 +646,7 @@ const submitUpload = async () => {
     font-weight: 500;
     margin: 0 0 8px;
     line-height: 1.4;
+    color: #1a1a1a;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
@@ -632,13 +662,26 @@ const submitUpload = async () => {
     margin-bottom: 8px;
 }
 
+.dish-price {
+    font-size: 16px;
+    font-weight: 600;
+    color: #e17b00;
+}
+
+.dish-stock {
+    font-size: 13px;
+    color: #606266;
+    font-weight: 500;
+}
+
 .sold-out-tag {
     font-size: 12px;
-    color: #f56c6c;
+    color: #cf1322;
     border: 1px solid currentColor;
     padding: 0 6px;
     border-radius: 4px;
     line-height: 18px;
+    font-weight: 500;
 }
 
 .dish-actions {
@@ -742,33 +785,39 @@ const submitUpload = async () => {
 }
 
 .preview-form :deep(.el-form-item__label) {
-    font-size: 14px;
-    padding-bottom: 4px;
+    color: #2c3e50;
+    font-weight: 500;
 }
 
-.preview-form :deep(.el-input__inner) {
-    height: 36px;
+.preview-form :deep(.el-input__inner),
+.preview-form :deep(.el-input-number__input) {
+    color: #2c3e50;
+    font-weight: 500;
 }
 
-.menu-uploader :deep(.el-upload-dragger) {
-    width: 100%;
-    height: 160px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
+.preview-form :deep(.el-select__input) {
+    color: #2c3e50;
+}
+
+.preview-form :deep(.el-select-dropdown__item) {
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+.preview-form :deep(.el-select-dropdown__item.selected) {
+    color: #e17b00;
+    font-weight: 600;
 }
 
 .menu-uploader :deep(.el-upload__text) {
     font-size: 14px;
     margin-top: 8px;
+    color: #606266;
 }
 
-.menu-uploader :deep(.el-icon--upload) {
-    font-size: 28px;
-    color: var(--el-color-primary);
-    margin-bottom: 4px;
+.menu-uploader :deep(.el-upload__tip) {
+    color: #909399;
+    font-size: 12px;
 }
 
 /* 响应式布局调整 */

@@ -31,139 +31,246 @@
       </div>
     </div>
 
-    <!-- 筛选工具栏 -->
-    <div class="filter-toolbar">
-      <el-select
-        v-model="filterType"
-        placeholder="筛选条件"
-        size="small"
-        style="width: 120px"
-        @change="handleFilterTypeChange"
-      >
-        <el-option label="订单号" value="orderNo" />
-        <el-option label="学生姓名" value="studentName" />
-        <el-option label="用餐方式" value="diningType" />
-        <el-option label="订单金额" value="total" />
-        <el-option label="下单日期" value="date" />
-      </el-select>
-      
-      <!-- 根据不同筛选条件显示不同的输入框 -->
-      <template v-if="filterType === 'date'">
-        <el-date-picker
-          v-model="dateRange"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          size="small"
-          @change="handleFilter"
-          style="width: 260px"
-          value-format="YYYY-MM-DD"
-          :shortcuts="dateShortcuts"
-        />
-      </template>
-      <template v-else-if="filterType === 'orderNo' || filterType === 'studentName'">
+    <!-- 搜索和筛选区域 -->
+    <div class="search-filter-area">
+      <!-- 搜索栏 -->
+      <div class="search-bar">
         <el-input
-          v-model="filterValue"
-          :placeholder="`请输入${filterType === 'orderNo' ? '订单号' : '学生姓名'}`"
-          size="small"
+          v-model="searchQuery"
+          placeholder="搜索订单号/学生姓名"
           clearable
-          @input="handleFilter"
-          style="width: 200px"
-        />
-      </template>
-      
-      <template v-else-if="filterType === 'diningType'">
-        <el-select
-          v-model="filterValue"
-          placeholder="选择用餐方式"
-          size="small"
-          clearable
-          @change="handleFilter"
-          style="width: 200px"
         >
-          <el-option label="堂食" value="堂食" />
-          <el-option label="外带" value="外带" />
-        </el-select>
-      </template>
-      
-      <template v-else-if="filterType === 'total'">
-        <div class="price-range">
-          <el-input-number
-            v-model="priceRange.min"
-            :min="0"
-            size="small"
-            placeholder="最小金额"
-            @change="handleFilter"
-          />
-          <span>-</span>
-          <el-input-number
-            v-model="priceRange.max"
-            :min="0"
-            size="small"
-            placeholder="最大金额"
-            @change="handleFilter"
-          />
-        </div>
-      </template>
-    </div>
-
-    <!-- 在 el-tabs 下方添加搜索栏 -->
-    <div class="search-bar">
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索订单号/学生姓名"
-        clearable
-      >
-        <template #prefix>
+          <template #prefix>
+            <el-icon><Search /></el-icon>
+          </template>
+        </el-input>
+        <el-button type="primary" @click="handleSearch">
           <el-icon><Search /></el-icon>
-        </template>
-      </el-input>
-      <el-button type="primary" @click="handleSearch">
-        <el-icon><Search /></el-icon>
-        搜索
-      </el-button>
-    </div>
+          搜索
+        </el-button>
+      </div>
 
-    <!-- 移动分页器到这里 -->
-    <div class="pagination-container">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 30, 50]"
-        :total="total" 
-        layout="total, sizes, prev, pager, next"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
-
-    <!-- 添加筛选抽屉 -->
-    <el-drawer
-      v-model="showFilter"
-      title="筛选条件"
-      direction="rtl"
-      size="80%"
-    >
-      <div class="filter-content">
-        <el-form>
-          <el-form-item label="用餐方式">
-            <el-select v-model="filters.diningType" clearable>
-              <el-option label="堂食" value="堂食" />
-              <el-option label="外带" value="外带" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="下单时间">
+      <!-- 筛选工具栏 -->
+      <div class="filter-toolbar">
+        <div class="toolbar-left">
+          <el-select
+            v-model="filterType"
+            placeholder="筛选条件"
+            size="small"
+            style="width: 120px"
+            @change="handleFilterTypeChange"
+            clearable
+          >
+            <el-option label="订单号" value="orderNo" />
+            <el-option label="学生姓名" value="studentName" />
+            <el-option label="用餐方式" value="diningType" />
+            <el-option label="订单金额" value="total" />
+            <el-option label="下单日期" value="date" />
+          </el-select>
+          
+          <!-- 根据不同筛选条件显示不同的输入框 -->
+          <template v-if="filterType === 'date'">
             <el-date-picker
-              v-model="filters.dateRange"
+              v-model="dateRange"
               type="daterange"
               range-separator="至"
               start-placeholder="开始日期"
               end-placeholder="结束日期"
+              size="small"
+              @change="handleFilter"
+              style="width: 260px"
+              value-format="YYYY-MM-DD"
+              :shortcuts="dateShortcuts"
             />
-          </el-form-item>
-        </el-form>
+          </template>
+          <template v-else-if="filterType === 'orderNo' || filterType === 'studentName'">
+            <el-input
+              v-model="filterValue"
+              :placeholder="`请输入${filterType === 'orderNo' ? '订单号' : '学生姓名'}`"
+              size="small"
+              clearable
+              @input="handleFilter"
+              style="width: 200px"
+            />
+          </template>
+          
+          <template v-else-if="filterType === 'diningType'">
+            <el-select
+              v-model="filterValue"
+              placeholder="选择用餐方式"
+              size="small"
+              clearable
+              @change="handleFilter"
+              style="width: 200px"
+            >
+              <el-option label="堂食" value="堂食" />
+              <el-option label="外带" value="外带" />
+            </el-select>
+          </template>
+          
+          <template v-else-if="filterType === 'total'">
+            <div class="price-range">
+              <el-input-number
+                v-model="priceRange.min"
+                :min="0"
+                size="small"
+                placeholder="最小金额"
+                @change="handleFilter"
+              />
+              <span>-</span>
+              <el-input-number
+                v-model="priceRange.max"
+                :min="0"
+                size="small"
+                placeholder="最大金额"
+                @change="handleFilter"
+              />
+            </div>
+          </template>
+
+          <!-- 添加重置按钮 -->
+          <el-button 
+            type="default" 
+            size="small" 
+            @click="handleResetFilter"
+            :disabled="!hasActiveFilters"
+          >
+            <el-icon><RefreshLeft /></el-icon>
+            重置
+          </el-button>
+        </div>
       </div>
+    </div>
+
+    <!-- 移动分页器到这里 -->
+    <div class="auto-accept-controls">
+      <div class="auto-accept-switch">
+        <el-switch
+          v-model="autoAcceptEnabled"
+          active-text="自动接单"
+          @change="handleAutoAcceptChange"
+        />
+        <el-select
+          v-if="autoAcceptEnabled"
+          v-model="autoNotifyType"
+          placeholder="提醒方式"
+          size="small"
+          style="width: 120px; margin-left: 10px;"
+        >
+          <el-option label="声音提醒" value="sound" />
+          <el-option label="桌面通知" value="desktop" />
+          <el-option label="全部提醒" value="all" />
+        </el-select>
+      </div>
+      <div class="auto-accept-actions">
+        <!-- 添加全选复选框 -->
+        <el-checkbox
+          v-model="isAllSelected"
+          :indeterminate="isIndeterminate"
+          @change="handleCheckAllChange"
+          class="select-all-checkbox"
+          :value="true"
+        >
+          全选
+        </el-checkbox>
+        <el-button
+          type="primary"
+          link
+          @click="showAutoAcceptSettings = true"
+        >
+          <el-icon><Setting /></el-icon>
+          设置
+        </el-button>
+      </div>
+    </div>
+
+    <!-- 添加自动接单设置抽屉 -->
+    <el-drawer
+      v-model="showAutoAcceptSettings"
+      title="自动接单设置"
+      direction="rtl"
+      size="90%"
+      :with-header="true"
+      class="settings-drawer"
+      :modal-class="'settings-drawer-modal'"
+      :append-to-body="true"
+    >
+      <template #header>
+        <h4 class="drawer-title">自动接单设置</h4>
+      </template>
+      
+      <div class="settings-content">
+        <el-scrollbar>
+          <el-form label-position="top">
+            <el-form-item label="接单时间范围">
+              <el-time-picker
+                v-model="autoAcceptSettings.timeRange"
+                is-range
+                range-separator="至"
+                start-placeholder="开始时间"
+                end-placeholder="结束时间"
+                format="HH:mm"
+                class="full-width-input"
+              />
+            </el-form-item>
+            <el-form-item label="最大同时处理订单数">
+              <el-input-number
+                v-model="autoAcceptSettings.maxOrders"
+                :min="1"
+                :max="20"
+                class="full-width-input"
+              />
+            </el-form-item>
+            <el-form-item label="自动拒单条件">
+              <el-checkbox-group v-model="autoAcceptSettings.rejectConditions" class="reject-conditions">
+                <el-checkbox value="largeOrder" class="condition-item">订单金额超过限制</el-checkbox>
+                <el-checkbox value="specialRequirement" class="condition-item">含有特殊要求</el-checkbox>
+                <el-checkbox value="busyHours" class="condition-item">高峰时段</el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+            <el-form-item label="订单金额限制" v-if="autoAcceptSettings.rejectConditions.includes('largeOrder')">
+              <el-input-number
+                v-model="autoAcceptSettings.maxOrderAmount"
+                :min="0"
+                :step="10"
+                class="full-width-input"
+              />
+            </el-form-item>
+            <el-form-item label="高峰时段设置" v-if="autoAcceptSettings.rejectConditions.includes('busyHours')">
+              <el-time-select
+                v-model="autoAcceptSettings.busyHours"
+                :picker-options="{
+                  start: '08:00',
+                  step: '00:30',
+                  end: '20:00'
+                }"
+                multiple
+                placeholder="选择高峰时段"
+                class="full-width-input"
+              />
+            </el-form-item>
+            <el-form-item label="智能调节">
+              <div class="smart-adjust-wrapper">
+                <el-switch
+                  v-model="autoAcceptSettings.smartAdjust"
+                  active-text="开启"
+                  inactive-text="关闭"
+                />
+                <div class="hint-text" v-if="autoAcceptSettings.smartAdjust">
+                  系统将根据历史数据自动调节接单参数
+                </div>
+              </div>
+            </el-form-item>
+          </el-form>
+        </el-scrollbar>
+      </div>
+      
+      <template #footer>
+        <div class="drawer-footer">
+          <el-button @click="showAutoAcceptSettings = false">取消</el-button>
+          <el-button type="primary" @click="saveAutoAcceptSettings">保存</el-button>
+        </div>
+      </template>
     </el-drawer>
 
     <!-- 批量操作工具栏 -->
@@ -443,6 +550,19 @@
       </el-checkbox-group>
     </div>
 
+    <!-- 分页器容器样式 -->
+    <div class="pagination-container">
+      <el-pagination
+        v-model:current-page="currentPage"
+        v-model:page-size="pageSize"
+        :page-sizes="[10, 20, 30, 50]"
+        :total="total" 
+        layout="total, sizes, prev, pager, next"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
+
     <!-- 加载状态 -->
     <div class="load-more" v-if="loading || noMore">
       <p v-if="loading">加载中...</p>
@@ -456,7 +576,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import notificationSound from '@/mp3/叮咚.mp3'
-import { User, InfoFilled, Search, Filter, ArrowDown, ArrowUp, Printer, Calendar } from '@element-plus/icons-vue'
+import { User, InfoFilled, Search, Filter, ArrowDown, ArrowUp, Printer, Calendar, Setting, RefreshLeft } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -491,6 +611,22 @@ const dateRange = ref([])
 const currentPage = ref(1)
 const total = ref(0)
 
+// 自动接单相关状态
+const autoAcceptEnabled = ref(false)
+const autoNotifyType = ref('sound')
+const showAutoAcceptSettings = ref(false)
+const autoAcceptSettings = ref({
+  timeRange: [new Date(2000, 1, 1, 8, 0), new Date(2000, 1, 1, 20, 0)],
+  maxOrders: 5,
+  rejectConditions: [],
+  maxOrderAmount: 100
+})
+
+// 添加全选相关状态
+const isAllSelected = ref(false)
+const isIndeterminate = ref(false)
+const isSelectingAll = ref(false)
+
 // 日期快捷选项
 const dateShortcuts = [
   {
@@ -522,7 +658,7 @@ const dateShortcuts = [
 ]
 
 const filteredOrders = computed(() => {
-  if (!filterType.value || (!filterValue.value && filterType.value !== 'total')) {
+  if (!filterType.value || (!filterValue.value && filterType.value !== 'total' && filterType.value !== 'date')) {
     return orders.value
   }
   
@@ -660,12 +796,48 @@ const fetchOrders = async (reset = false) => {
     const statusMap = {
       'pending': '待处理',
       'processing': '进行中',
-      'completed': '已完成'  // 确保这个值与测试数据中的状态一致
+      'completed': '已完成'
     }
     
-    const filteredOrders = TEST_ORDERS.filter(order => 
+    // 先应用状态筛选
+    let filteredOrders = TEST_ORDERS.filter(order => 
       order.status === statusMap[activeStatus.value]
     )
+    
+    // 应用搜索和筛选条件
+    if (searchQuery.value) {
+      const query = searchQuery.value.toLowerCase()
+      filteredOrders = filteredOrders.filter(order => 
+        order.orderNo.toLowerCase().includes(query) ||
+        order.studentName.toLowerCase().includes(query)
+      )
+    }
+    
+    // 应用其他筛选条件
+    if (filterType.value) {
+      filteredOrders = filteredOrders.filter(order => {
+        switch (filterType.value) {
+          case 'date':
+            if (!dateRange.value || !dateRange.value.length) return true
+            const orderDate = dayjs(order.createTime).format('YYYY-MM-DD')
+            const startDate = dateRange.value[0]
+            const endDate = dateRange.value[1]
+            return orderDate >= startDate && orderDate <= endDate
+          case 'orderNo':
+            return order.orderNo.toLowerCase().includes(filterValue.value.toLowerCase())
+          case 'studentName':
+            return order.studentName.includes(filterValue.value)
+          case 'diningType':
+            return order.diningType === filterValue.value
+          case 'total':
+            const min = priceRange.value.min ?? 0
+            const max = priceRange.value.max ?? Infinity
+            return order.total >= min && order.total <= max
+          default:
+            return true
+        }
+      })
+    }
     
     // 修改分页逻辑
     const start = (currentPage.value - 1) * pageSize.value
@@ -867,7 +1039,7 @@ const handleStatusChange = async (order, newStatus) => {
     triggerHapticFeedback();
     ElMessage.success('订单状态已更新');
   } catch (error) {
-    ElMessage.error('更新���败');
+    ElMessage.error('更新失败');
   }
 }
 
@@ -1079,15 +1251,12 @@ const handleFilterTypeChange = () => {
 // 修改筛选处理函数
 const handleFilter = () => {
   if (filterType.value === 'total') {
-    // 处理金额范围筛���
+    // 处理金额范围筛选
     if (priceRange.value.max && priceRange.value.min > priceRange.value.max) {
       ElMessage.warning('最小金额不能大于最大金额')
       return
     }
   }
-  
-  // 重置搜索框
-  searchQuery.value = ''
   
   // 重置分页
   currentPage.value = 1
@@ -1136,6 +1305,193 @@ const handlePrint = async (order) => {
   } catch (error) {
     console.error(error)
     ElMessage.error('打印失败')
+  }
+}
+
+// 处理自动接单开关变化
+const handleAutoAcceptChange = (value) => {
+  if (value) {
+    ElMessageBox.confirm(
+      '开启自动接单后，系统将按照设置的条件自动处理新订单。是否继续？',
+      '提示',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      // 启动自动接单逻辑
+      startAutoAccept()
+    }).catch(() => {
+      autoAcceptEnabled.value = false
+    })
+  } else {
+    stopAutoAccept()
+  }
+}
+
+// 启动自动接单
+const startAutoAccept = () => {
+  ElMessage.success('自动接单已开启')
+  // TODO: 实现自动接单逻辑
+}
+
+// 停止自动接单
+const stopAutoAccept = () => {
+  ElMessage.info('自动接单已关闭')
+  // TODO: 清理自动接单相关资源
+}
+
+// 添加数据缓存
+const orderCache = new Map()
+
+// 添加智能排序
+const sortedOrders = computed(() => {
+  return orders.value.sort((a, b) => {
+    // 优先级排序
+    if (a.priority !== b.priority) return b.priority - a.priority
+    // 等待时间排序
+    return a.createTime - b.createTime
+  })
+})
+
+// 添加订单分析
+const orderAnalytics = computed(() => {
+  return {
+    avgProcessTime: calculateAvgProcessTime(orders.value),
+    peakHours: analyzePeakHours(orders.value),
+    popularDishes: analyzePopularDishes(orders.value)
+  }
+})
+
+// 监听选择变化
+watch(selectedOrders, (val) => {
+  const checkedCount = val.length
+  const totalCount = orders.value.length
+  isAllSelected.value = checkedCount === totalCount && totalCount > 0
+  isIndeterminate.value = checkedCount > 0 && checkedCount < totalCount
+})
+
+// 处理全选变化
+const handleCheckAllChange = async (val) => {
+  isSelectingAll.value = true
+  try {
+    if (val) {
+      // 如果是全选操作
+      if (filteredOrders.value.length >= 100) {
+        // 如果数据量较大，提示用户
+        const confirm = await ElMessageBox.confirm(
+          `当前筛选条件下共有 ${total.value} 条数据，是否全部选择？`,
+          '提示',
+          {
+            confirmButtonText: '全选',
+            cancelButtonText: '仅选择当前页',
+            type: 'warning'
+          }
+        )
+        
+        if (confirm) {
+          // 全选所有数据
+          const allOrders = await fetchAllOrders() // 需要实现这个方法来获取所有数据
+          selectedOrders.value = allOrders.map(order => order.id)
+          ElMessage.success(`已选择全部 ${total.value} 条数据`)
+        } else {
+          // 仅选择当前页
+          selectedOrders.value = orders.value.map(order => order.id)
+          ElMessage.success(`已选择当前页 ${orders.value.length} 条数据`)
+        }
+      } else {
+        // 数据量较小，直接全选
+        selectedOrders.value = orders.value.map(order => order.id)
+      }
+    } else {
+      // 取消全选
+      selectedOrders.value = []
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('操作失败')
+    }
+  } finally {
+    isSelectingAll.value = false
+  }
+}
+
+// 获取所有订单数据的方法
+const fetchAllOrders = async () => {
+  loading.value = true
+  try {
+    // 这里需要调用后端接口获取所有数据
+    // 临时使用测试数据
+    const allOrders = TEST_ORDERS.filter(order => {
+      // 根据当前筛选条件过滤
+      if (activeStatus.value === 'pending') return order.status === '待处理'
+      if (activeStatus.value === 'processing') return order.status === '进行中'
+      if (activeStatus.value === 'completed') return order.status === '已完成'
+      return true
+    })
+    return allOrders
+  } catch (error) {
+    ElMessage.error('获取数据失败')
+    return []
+  } finally {
+    loading.value = false
+  }
+}
+
+// 修改批量处理相关方法
+const handleBatchCommand = async (command) => {
+  switch (command) {
+    case 'selectAll':
+      handleCheckAllChange(true)
+      break
+    // ... existing cases ...
+  }
+}
+
+// 重置筛选条件
+const handleResetFilter = () => {
+  // 重置所有筛选相关的状态
+  filterType.value = ''
+  filterValue.value = ''
+  dateRange.value = []
+  priceRange.value = {
+    min: null,
+    max: null
+  }
+  searchQuery.value = ''
+  
+  // 重置分页
+  currentPage.value = 1
+  
+  // 重新获取订单数据
+  fetchOrders(true)
+  
+  // 提示用户
+  ElMessage.success('筛选条件已重置')
+}
+
+// 判断是否有活动筛选条件
+const hasActiveFilters = computed(() => {
+  return Boolean(
+    filterType.value || 
+    filterValue.value || 
+    (dateRange.value && dateRange.value.length) || 
+    priceRange.value.min !== null || 
+    priceRange.value.max !== null ||
+    searchQuery.value
+  )
+})
+
+// 保存自动接单设置
+const saveAutoAcceptSettings = async () => {
+  try {
+    // TODO: 调用API保存设置
+    await new Promise(resolve => setTimeout(resolve, 500))
+    ElMessage.success('设置已保存')
+    showAutoAcceptSettings.value = false
+  } catch (error) {
+    ElMessage.error('保存设置失败')
   }
 }
 
@@ -1197,6 +1553,8 @@ const handlePrint = async (order) => {
 
 .order-card {
   margin-bottom: 10px;
+  touch-action: pan-y;
+  position: relative;
 }
 
 .order-card.new-order {
@@ -1737,7 +2095,7 @@ const handlePrint = async (order) => {
     flex: 1;
 }
 
-/* 状态标签样��优化 */
+/* 状态标签样式优化 */
 .order-info .el-tag {
     flex-shrink: 0;
     min-width: 64px;
@@ -2053,11 +2411,49 @@ const handlePrint = async (order) => {
 
 /* 添加分页容器样式 */
 .pagination-container {
-  margin: 15px 0;
-  padding: 10px;
+  position: sticky;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 15px;
   background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination-container :deep(.el-pagination) {
+  justify-content: center;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.pagination-container :deep(.el-pagination.is-background) .btn-next,
+.pagination-container :deep(.el-pagination.is-background) .btn-prev,
+.pagination-container :deep(.el-pagination.is-background) .el-pager li {
+  background-color: #f5f7fa;
+  border: 1px solid #e4e7ed;
+  margin: 0 4px;
+}
+
+.pagination-container :deep(.el-pagination.is-background) .el-pager li:not(.disabled).active {
+  background-color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  color: #fff;
+}
+
+.pagination-container :deep(.el-pagination .el-select .el-input) {
+  width: 110px;
+}
+
+.pagination-container :deep(.el-pagination__sizes) {
+  margin-right: 15px;
+}
+
+.pagination-container :deep(.el-pagination__total) {
+  margin-right: 15px;
 }
 
 /* 移动端适配 */
@@ -2065,17 +2461,67 @@ const handlePrint = async (order) => {
   .pagination-container {
     padding: 10px;
   }
-  
+
+  .pagination-container :deep(.el-pagination) {
+    font-size: 13px;
+  }
+
+  .pagination-container :deep(.el-pagination__sizes) {
+    margin-right: 8px;
+  }
+
+  .pagination-container :deep(.el-pagination__total) {
+    margin-right: 8px;
+  }
+
+  .pagination-container :deep(.el-pagination.is-background) .btn-next,
+  .pagination-container :deep(.el-pagination.is-background) .btn-prev,
+  .pagination-container :deep(.el-pagination.is-background) .el-pager li {
+    min-width: 30px;
+    margin: 0 2px;
+  }
+
+  .pagination-container :deep(.el-pagination .el-select .el-input) {
+    width: 90px;
+  }
+}
+
+/* 小屏幕适配 */
+@media screen and (max-width: 375px) {
+  .pagination-container {
+    padding: 8px;
+  }
+
   .pagination-container :deep(.el-pagination) {
     font-size: 12px;
   }
-  
-  .pagination-container :deep(.el-pagination .el-select) {
-    margin: 0 5px;
+
+  .pagination-container :deep(.el-pagination__sizes) {
+    margin-right: 6px;
   }
-  
-  .pagination-container :deep(.el-pagination button) {
+
+  .pagination-container :deep(.el-pagination__total) {
+    margin-right: 6px;
+  }
+
+  .pagination-container :deep(.el-pagination.is-background) .btn-next,
+  .pagination-container :deep(.el-pagination.is-background) .btn-prev,
+  .pagination-container :deep(.el-pagination.is-background) .el-pager li {
     min-width: 28px;
+    height: 28px;
+    line-height: 28px;
+    margin: 0 1px;
+  }
+
+  .pagination-container :deep(.el-pagination .el-select .el-input) {
+    width: 80px;
+  }
+}
+
+/* 适配 iPhone 底部安全区域 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .pagination-container {
+    padding-bottom: calc(15px + env(safe-area-inset-bottom));
   }
 }
 
@@ -2132,6 +2578,338 @@ const handlePrint = async (order) => {
   .history-entry .el-button {
     font-size: 12px;
     padding: 0 8px;
+  }
+}
+
+/* 自动接单控件样式 */
+.auto-accept-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+  background: #fff;
+  margin: 10px 0;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.auto-accept-switch {
+  display: flex;
+  align-items: center;
+}
+
+.auto-accept-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.select-all-checkbox {
+  margin: 0;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+  .auto-accept-controls {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .auto-accept-switch {
+    width: 100%;
+  }
+
+  .auto-accept-actions {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+}
+
+/* 确保分页器始终在底部 */
+.pagination-container {
+  margin-top: auto;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 添加左滑显示快捷操作 */
+.swipe-actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 100%;
+  display: flex;
+  transform: translateX(100%);
+  transition: transform 0.3s;
+}
+
+/* 添加下拉刷新样式 */
+.pull-refresh {
+  --pull-refresh-height: 50px;
+  overflow: hidden;
+}
+
+/* 优化移动端点击区域 */
+.action-button {
+  min-height: 44px;
+  padding: 12px 20px;
+}
+
+.select-all-checkbox {
+  margin-right: 16px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+  .select-all-checkbox {
+    margin-right: 8px;
+  }
+}
+
+/* 添加加载状态样式 */
+.select-all-checkbox :deep(.el-checkbox__input.is-disabled) {
+  cursor: wait;
+}
+
+.select-all-checkbox :deep(.el-checkbox__input.is-disabled + .el-checkbox__label) {
+  cursor: wait;
+  color: var(--el-text-color-placeholder);
+}
+
+/* 自动接单设置抽屉样式 */
+:deep(.settings-drawer .el-drawer__header) {
+  margin-bottom: 0;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--el-border-color-light);
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+:deep(.settings-drawer .el-drawer__body) {
+  height: calc(100% - 116px);
+  padding: 0;
+  overflow: hidden;
+  background: #f5f7fa;
+}
+
+.drawer-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--el-text-color-primary);
+}
+
+.settings-content {
+  height: 100%;
+  background: #fff;
+}
+
+:deep(.el-form) {
+  padding: 20px;
+  background: #fff;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 24px;
+}
+
+.full-width-input {
+  width: 100%;
+}
+
+.reject-conditions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.condition-item {
+  margin-right: 0 !important;
+}
+
+.smart-adjust-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint-text {
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  line-height: 1.4;
+}
+
+.drawer-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px 20px;
+  background: #fff;
+  border-top: 1px solid var(--el-border-color-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  z-index: 10;
+}
+
+/* 适配 iPhone 底部安全区域 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .drawer-footer {
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+  
+  :deep(.settings-drawer .el-drawer__body) {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+  :deep(.settings-drawer) {
+    width: 100% !important;
+  }
+  
+  .drawer-footer {
+    padding: 10px 16px;
+  }
+  
+  :deep(.el-form) {
+    padding: 16px;
+  }
+}
+
+:deep(.el-scrollbar) {
+  height: 100%;
+}
+
+:deep(.el-scrollbar__wrap) {
+  padding-bottom: 80px;
+}
+
+/* 优化抽屉样式，确保正确显示位置 */
+:deep(.settings-drawer) {
+  top: 108px !important;
+  height: calc(100% - 108px) !important;
+  border-radius: 16px 0 0 0;
+}
+
+:deep(.settings-drawer-modal) {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+:deep(.el-overlay) {
+  position: fixed;
+  top: 108px;
+  height: calc(100% - 108px);
+}
+
+/* 搜索和筛选区域样式 */
+.search-filter-area {
+  margin-top: 108px;
+  padding: 12px 15px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 搜索栏样式 */
+.search-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.search-bar .el-input {
+  flex: 1;
+}
+
+.search-bar .el-button {
+  flex-shrink: 0;
+  min-width: 80px;
+}
+
+/* 筛选工具栏样式 */
+.filter-toolbar {
+  background: #f8f9fa;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.toolbar-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.price-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.price-range .el-input-number {
+  width: 120px;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 480px) {
+  .search-filter-area {
+    padding: 10px;
+    margin-top: 100px;
+  }
+
+  .search-bar {
+    gap: 8px;
+  }
+
+  .search-bar .el-button {
+    min-width: 60px;
+    padding: 0 12px;
+  }
+
+  .filter-toolbar {
+    padding: 10px;
+  }
+
+  .toolbar-left {
+    gap: 8px;
+  }
+
+  .toolbar-left > * {
+    width: 100% !important;
+  }
+
+  .price-range {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .price-range .el-input-number {
+    width: calc(50% - 10px);
+  }
+}
+
+/* 移动端优化 */
+@media screen and (max-width: 375px) {
+  .search-filter-area {
+    padding: 8px;
+    margin-top: 96px;
+  }
+
+  .search-bar .el-button {
+    font-size: 13px;
+  }
+
+  .filter-toolbar {
+    padding: 8px;
   }
 }
 </style> 
