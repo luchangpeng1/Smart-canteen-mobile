@@ -184,6 +184,14 @@
         </el-tab-pane>
         <el-tab-pane label="进行中" name="processing" />
         <el-tab-pane label="已完成" name="completed" />
+        <!-- 添加退款申请标签页 -->
+        <el-tab-pane name="refund">
+          <template #label>
+            <el-badge :value="refundCount" :hidden="!refundCount" type="danger">
+              退款申请
+            </el-badge>
+          </template>
+        </el-tab-pane>
       </el-tabs>
 
       <!-- 历史订单入口 -->
@@ -200,7 +208,7 @@
     </div>
 
     <!-- 搜索和筛选区域 -->
-    <div class="search-filter-area">
+    <div class="search-filter-area" v-if="activeStatus !== 'refund'">
       <!-- 搜索栏 -->
       <div class="search-bar">
         <el-input
@@ -311,7 +319,7 @@
     </div>
 
     <!-- 移动分页器到这里 -->
-    <div class="auto-accept-controls">
+    <div class="auto-accept-controls" v-if="activeStatus !== 'refund'">
       <div class="auto-accept-switch">
         <el-switch
           v-model="autoAcceptEnabled"
@@ -442,7 +450,7 @@
     </el-drawer>
 
     <!-- 批量操作工具栏 -->
-    <div v-if="selectedOrders.length > 0" class="batch-toolbar">
+    <div v-if="selectedOrders.length > 0 && activeStatus !== 'refund'" class="batch-toolbar">
       <span class="selected-count">已选择 {{ selectedOrders.length }} 个订单</span>
       <div class="batch-actions">
         <!-- 批量处理下拉菜单 -->
@@ -486,7 +494,7 @@
     </div>
 
     <!-- 在订单列表上方添加统计卡片 -->
-    <div class="stats-cards">
+    <div class="stats-cards" v-if="activeStatus !== 'refund'">
       <el-row :gutter="10">
         <el-col :span="8">
           <div class="stat-card">
@@ -510,7 +518,7 @@
     </div>
 
     <!-- 订单列表 -->
-    <div class="order-list">
+    <div class="order-list" v-if="activeStatus !== 'refund'">
       <el-checkbox-group v-model="selectedOrders" @change="handleSelectionChange">
         <!-- 按日期分组显示已完成订单 -->
         <template v-if="activeStatus === 'completed'">
@@ -719,7 +727,7 @@
     </div>
 
     <!-- 分页器容器样式 -->
-    <div class="pagination-container">
+    <div class="pagination-container" v-if="activeStatus !== 'refund'">
       <el-pagination
         v-model:current-page="currentPage"
         v-model:page-size="pageSize"
@@ -732,10 +740,125 @@
     </div>
 
     <!-- 加载状态 -->
-    <div class="load-more" v-if="loading || noMore">
+    <div class="load-more" v-if="(loading || noMore) && activeStatus !== 'refund'">
       <p v-if="loading">加载中...</p>
       <p v-if="noMore">没有更多订单了</p>
     </div>
+
+    <!-- 在订单列表区域添加退款申请的展示逻辑 -->
+    <template v-if="activeStatus === 'refund'">
+      <div class="refund-filter">
+        <el-date-picker
+          v-model="refundDate"
+          type="date"
+          placeholder="选择日期筛选退款申请"
+          format="YYYY年MM月DD日"
+          value-format="YYYY-MM-DD"
+          :clearable="true"
+          @change="handleRefundDateChange"
+          class="refund-date-picker"
+        />
+        <el-button 
+          type="default" 
+          @click="handleResetRefundDate"
+          :disabled="!refundDate"
+          class="reset-button"
+        >
+          <el-icon><RefreshLeft /></el-icon>
+          重置
+        </el-button>
+      </div>
+
+      <div class="refund-list">
+        <el-card v-for="refund in refundOrders" :key="refund.id" class="refund-card" :class="{ 'pending-refund': refund.status === 'pending' }">
+          <div class="refund-header">
+            <div class="refund-info">
+              <div class="order-info-row">
+                <span class="order-no">订单号：{{ refund.orderNo }}</span>
+                <el-tag :type="getRefundStatusType(refund.status)" size="small" class="status-tag" effect="light">
+                  {{ getRefundStatusText(refund.status) }}
+                </el-tag>
+              </div>
+              <div class="refund-time">
+                申请时间：{{ formatTime(refund.applyTime) }}
+              </div>
+            </div>
+          </div>
+          
+          <div class="refund-content">
+            <div class="refund-user-info">
+              <el-avatar :size="36" :src="refund.userAvatar" class="user-avatar">
+                {{ refund.userName.charAt(0) }}
+              </el-avatar>
+              <div class="user-details">
+                <span class="user-name">{{ refund.userName }}</span>
+                <span class="user-id">学号：{{ refund.userId }}</span>
+              </div>
+              <div class="refund-amount-tag">
+                <span class="amount">¥{{ refund.amount }}</span>
+              </div>
+            </div>
+            
+            <div class="refund-details">
+              <div class="refund-reason-box">
+                <div class="reason-header">
+                  <span class="label">退款原因</span>
+                  <span class="reason-tag">{{ refund.reason }}</span>
+                </div>
+                <div class="description" v-if="refund.description">
+                  {{ refund.description }}
+                </div>
+              </div>
+              
+              <div class="refund-images" v-if="refund.images && refund.images.length">
+                <div class="images-header">
+                  <span class="label">图片凭证</span>
+                  <span class="image-count">共 {{ refund.images.length }} 张</span>
+                </div>
+                <div class="image-list">
+                  <el-image
+                    v-for="(img, index) in refund.images"
+                    :key="index"
+                    :src="img"
+                    :preview-src-list="refund.images"
+                    fit="cover"
+                    class="evidence-image"
+                  >
+                    <template #error>
+                      <div class="image-error">
+                        <el-icon><Picture /></el-icon>
+                      </div>
+                    </template>
+                  </el-image>
+                </div>
+              </div>
+            </div>
+            
+            <div class="refund-actions" v-if="refund.status === 'pending'">
+              <el-button type="success" plain @click="handleApproveRefund(refund)" class="action-button">
+                <el-icon><Check /></el-icon>同意退款
+              </el-button>
+              <el-button type="danger" plain @click="handleRejectRefund(refund)" class="action-button">
+                <el-icon><Close /></el-icon>拒绝退款
+              </el-button>
+            </div>
+          </div>
+        </el-card>
+      </div>
+      
+      <!-- 为退款列表添加专门的分页器 -->
+      <div class="pagination-container">
+        <el-pagination
+          v-model:current-page="refundCurrentPage"
+          v-model:page-size="refundPageSize"
+          :page-sizes="[10, 20, 30, 50]"
+          :total="refundTotal"
+          layout="total, sizes, prev, pager, next"
+          @size-change="handleRefundSizeChange"
+          @current-change="handleRefundCurrentChange"
+        />
+      </div>
+    </template>
   </div>
 </template>
 
@@ -744,7 +867,7 @@ import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import notificationSound from '@/mp3/叮咚.mp3'
-import { User, InfoFilled, Search, Filter, ArrowDown, ArrowUp, Printer, Calendar, Setting, RefreshLeft, Location, Timer, Edit, SwitchButton, Delete, Plus } from '@element-plus/icons-vue'
+import { User, InfoFilled, Search, Filter, ArrowDown, ArrowUp, Printer, Calendar, Setting, RefreshLeft, Location, Timer, Edit, SwitchButton, Delete, Plus, Check, Close, Picture } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -1919,6 +2042,199 @@ const fetchWindowInfo = async () => {
 onMounted(() => {
   fetchWindowInfo()
 })
+
+// 添加退款相关的状态
+const refundCount = ref(0)
+const refundOrders = ref([])
+const refundDate = ref('') // 添加退款日期筛选
+
+// 获取退款状态类型
+const getRefundStatusType = (status) => {
+  const types = {
+    'pending': 'warning',
+    'approved': 'success',
+    'rejected': 'danger',
+    'completed': 'info'
+  }
+  return types[status] || 'info'
+}
+
+// 处理退款日期变化
+const handleRefundDateChange = () => {
+  refundCurrentPage.value = 1
+  fetchRefundOrders()
+}
+
+// 重置退款日期筛选
+const handleResetRefundDate = () => {
+  refundDate.value = ''
+  refundCurrentPage.value = 1
+  fetchRefundOrders()
+}
+
+// 获取退款状态文本
+const getRefundStatusText = (status) => {
+  const texts = {
+    'pending': '待处理',
+    'approved': '已同意',
+    'rejected': '已拒绝',
+    'completed': '已完成'
+  }
+  return texts[status] || status
+}
+
+// 处理同意退款
+const handleApproveRefund = async (refund) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定同意退款 ¥${refund.amount} 给用户 ${refund.userName} 吗？`,
+      '确认退款',
+      {
+        confirmButtonText: '确定退款',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // TODO: 调用退款API
+    // await api.approveRefund(refund.id)
+    
+    // 模拟API调用
+    refund.status = 'approved'
+    ElMessage.success('已同意退款')
+    
+    // 重新获取退款列表
+    await fetchRefundOrders()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('处理退款失败')
+    }
+  }
+}
+
+// 处理拒绝退款
+const handleRejectRefund = async (refund) => {
+  try {
+    const { value: reason } = await ElMessageBox.prompt(
+      '请输入拒绝原因',
+      '拒绝退款',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPlaceholder: '请输入拒绝退款的原因',
+        inputValidator: (value) => {
+          if (!value) {
+            return '请输入拒绝原因'
+          }
+          return true
+        }
+      }
+    )
+    
+    if (reason) {
+      // TODO: 调用退款API
+      // await api.rejectRefund(refund.id, reason)
+      
+      // 模拟API调用
+      refund.status = 'rejected'
+      refund.rejectReason = reason
+      ElMessage.success('已拒绝退款')
+      
+      // 重新获取退款列表
+      await fetchRefundOrders()
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error('处理退款失败')
+    }
+  }
+}
+
+// 获取退款订单列表
+const fetchRefundOrders = async () => {
+  try {
+    // TODO: 调用API获取退款列表
+    // const response = await api.getRefundOrders()
+    // refundOrders.value = response.data
+    
+    // 模拟数据
+    let mockData = [
+      {
+        id: 1,
+        orderNo: 'DD20240220001',
+        status: 'pending',
+        applyTime: Date.now() - 3600000,
+        userName: '张三',
+        userId: '2024001',
+        userAvatar: '',
+        amount: 25.5,
+        reason: '菜品口感不佳',
+        description: '饭菜太咸了，而且不够新鲜',
+        images: [
+          'https://example.com/image1.jpg',
+          'https://example.com/image2.jpg'
+        ]
+      },
+      {
+        id: 2,
+        orderNo: 'DD20240220002',
+        status: 'approved',
+        applyTime: Date.now() - 7200000,
+        userName: '李四',
+        userId: '2024002',
+        userAvatar: '',
+        amount: 18.0,
+        reason: '等待时间过长',
+        description: '等了一个小时还没有出餐'
+      }
+    ]
+    
+    // 如果选择了日期，进行筛选
+    if (refundDate.value) {
+      mockData = mockData.filter(order => {
+        const orderDate = dayjs(order.applyTime).format('YYYY-MM-DD')
+        return orderDate === refundDate.value
+      })
+    }
+    
+    refundOrders.value = mockData
+    refundTotal.value = mockData.length
+    
+    // 更新待处理退款数量
+    refundCount.value = mockData.filter(r => r.status === 'pending').length
+  } catch (error) {
+    console.error(error)
+    ElMessage.error('获取退款列表失败')
+  }
+}
+
+// 监听标签页变化
+watch(activeStatus, (newStatus) => {
+  if (newStatus === 'refund') {
+    fetchRefundOrders()
+  }
+})
+
+// 在组件挂载时获取退款列表
+onMounted(() => {
+  fetchRefundOrders()
+})
+
+// 添加退款列表分页相关状态
+const refundCurrentPage = ref(1)
+const refundPageSize = ref(10)
+const refundTotal = ref(0)
+
+// 处理退款列表分页
+const handleRefundSizeChange = (val) => {
+  refundPageSize.value = val
+  fetchRefundOrders()
+}
+
+const handleRefundCurrentChange = (val) => {
+  refundCurrentPage.value = val
+  fetchRefundOrders()
+}
 </script>
 
 <style scoped>
@@ -2258,7 +2574,7 @@ onMounted(() => {
 
 /* 适配 iPhone 底部安区域 */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
-  .mobile-orders {
+.mobile-orders {
     padding-bottom: calc(20px + env(safe-area-inset-bottom));
   }
 }
@@ -3703,6 +4019,329 @@ onMounted(() => {
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .window-control {
     padding-bottom: calc(12px + env(safe-area-inset-bottom));
+  }
+}
+
+/* 添加退款相关样式 */
+.refund-list {
+  padding: 12px;
+  margin-top: 0;  /* 修改margin-top以适应筛选器 */
+  background: #f5f7fa;
+  min-height: calc(100vh - 180px);  /* 调整高度以适应筛选器 */
+}
+
+.refund-card {
+  margin-bottom: 12px;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.refund-card.pending-refund {
+  border-left: 4px solid #e6a23c;
+}
+
+.refund-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.refund-info {
+  width: 100%;
+}
+
+.order-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.order-no {
+  font-size: 15px;
+  color: #303133;
+  font-weight: 500;
+}
+
+.status-tag {
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.refund-time {
+  font-size: 13px;
+  color: #909399;
+}
+
+.refund-content {
+  padding: 16px;
+  background: #fff;
+}
+
+.refund-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed #ebeef5;
+  position: relative;
+}
+
+.user-avatar {
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #303133;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.user-id {
+  font-size: 13px;
+  color: #909399;
+}
+
+.refund-amount-tag {
+  background: #f56c6c10;
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #f56c6c20;
+}
+
+.amount {
+  color: #f56c6c;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.refund-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.refund-reason-box {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.reason-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.label {
+  color: #606266;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.reason-tag {
+  background: #e6a23c15;
+  color: #e6a23c;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.description {
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+
+.refund-images {
+  margin-top: 4px;
+}
+
+.images-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.image-count {
+  font-size: 13px;
+  color: #909399;
+}
+
+.image-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.evidence-image {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease;
+}
+
+.evidence-image:hover {
+  transform: scale(1.02);
+}
+
+.image-error {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fa;
+  color: #909399;
+  font-size: 24px;
+}
+
+.refund-actions {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px dashed #ebeef5;
+}
+
+.action-button {
+  height: 40px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.action-button .el-icon {
+  font-size: 16px;
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+  .refund-list {
+    padding: 8px;
+  }
+  
+  .refund-card {
+    margin-bottom: 10px;
+  }
+  
+  .refund-header {
+    padding: 10px 12px;
+  }
+  
+  .refund-content {
+    padding: 12px;
+  }
+  
+  .order-no {
+    font-size: 14px;
+  }
+  
+  .user-name {
+    font-size: 14px;
+  }
+  
+  .amount {
+    font-size: 15px;
+  }
+  
+  .image-list {
+    gap: 6px;
+  }
+  
+  .action-button {
+    height: 36px;
+    font-size: 13px;
+  }
+}
+
+/* 确保退款列表页面的分页器样式正确 */
+.refund-list + .pagination-container {
+  margin-top: 0;
+  position: sticky;
+  bottom: 0;
+  background: #fff;
+  z-index: 10;
+  padding: 12px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+/* 添加退款筛选样式 */
+.refund-filter {
+  position: sticky;
+  top: 60px;
+  z-index: 100;
+  background: #fff;
+  padding: 12px 16px;
+  margin: 60px 12px 0;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.refund-filter .refund-date-picker {
+  flex: 1;
+}
+
+.refund-filter .reset-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.refund-filter .reset-button:not(:disabled):hover {
+  background-color: #f5f7fa;
+}
+
+.refund-filter .reset-button .el-icon {
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.refund-filter .reset-button:not(:disabled):hover .el-icon {
+  transform: rotate(-180deg);
+}
+
+/* 移动端适配 */
+@media screen and (max-width: 480px) {
+  .refund-filter {
+    padding: 10px 12px;
+    margin: 60px 8px 0;
+  }
+  
+  .refund-filter .reset-button {
+    padding: 8px 12px;
+  }
+}
+
+/* iPhone 底部安全区域适配 */
+@supports (margin-bottom: env(safe-area-inset-bottom)) {
+  .refund-filter {
+    margin-bottom: env(safe-area-inset-bottom);
   }
 }
 </style> 
