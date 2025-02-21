@@ -694,9 +694,9 @@ onMounted(() => {
 }
 
 .user-name {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-primary);
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
 }
 
 .user-details {
@@ -713,8 +713,8 @@ onMounted(() => {
 }
 
 .order-info {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  color: #666;
   background: #f8f9fa;
   padding: 6px 12px;
   border-radius: 20px;
@@ -754,15 +754,15 @@ onMounted(() => {
 }
 
 .dish-name {
-  font-size: 14px;
-  color: var(--text-primary);
+  font-size: 15px;
+  color: #333;
   margin-bottom: 6px;
   display: block;
   font-weight: 500;
 }
 
 .dish-price {
-  font-size: 13px;
+  font-size: 14px;
   color: #ff4d4f;
   font-weight: 600;
 }
@@ -772,10 +772,11 @@ onMounted(() => {
 }
 
 .review-text {
-  font-size: 15px;
-  color: var(--text-primary);
+  font-size: 16px;
+  color: #333;
   line-height: 1.7;
   margin: 0 0 16px;
+  font-weight: 400;
 }
 
 .review-images {
@@ -817,42 +818,95 @@ onMounted(() => {
 .review-tag {
   background: #f8f9fa;
   border: none;
-  color: var(--text-secondary);
+  color: #666;
   padding: 6px 12px;
   border-radius: 16px;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .review-reply {
-  background: #f8f9fa;
+  background: #fafafa;
   border-radius: 12px;
   padding: 16px;
   margin-top: 16px;
+  position: relative;
+}
+
+.review-reply::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: 20px;
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fafafa;
 }
 
 .reply-header {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.reply-header :deep(.el-tag) {
+  background-color: #fff7e6;
+  border-color: #ffd591;
+  color: #fa8c16;
+  font-size: 13px;
+  padding: 0 8px;
+  height: 24px;
+  line-height: 22px;
+  border-radius: 4px;
+  font-weight: 500;
 }
 
 .reply-time {
   font-size: 13px;
-  color: var(--text-light);
+  color: #999;
 }
 
 .reply-content {
-  font-size: 14px;
-  color: var(--text-secondary);
+  font-size: 15px;
+  color: #333;
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.6;
+  word-break: break-all;
+  white-space: pre-wrap;
 }
 
 .review-actions {
   display: flex;
   justify-content: flex-end;
-  margin-top: 20px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.review-actions :deep(.el-button) {
+  font-size: 14px;
+  height: 36px;
+  padding: 0 20px;
+  font-weight: 500;
+}
+
+.review-actions :deep(.el-button--primary) {
+  background: #ff9c00;
+  border-color: #ff9c00;
+  color: #fff;
+}
+
+.review-actions :deep(.el-button--primary:hover) {
+  background: #ffb340;
+  border-color: #ffb340;
+  color: #fff;
+}
+
+.review-actions :deep(.el-button--primary:focus) {
+  color: #fff;
 }
 
 /* 分页器样式 */
@@ -951,28 +1005,43 @@ onMounted(() => {
   }
   
   .user-name {
+    font-size: 14px;
+  }
+
+  .review-reply {
+    padding: 12px;
+    margin-top: 12px;
+  }
+  
+  .reply-header {
+    margin-bottom: 8px;
+  }
+  
+  .reply-content {
+    font-size: 14px;
+  }
+  
+  .review-actions {
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .dish-name {
+    font-size: 14px;
+  }
+  
+  .review-text {
+    font-size: 15px;
+  }
+  
+  .review-tag {
     font-size: 13px;
   }
 
-  .reply-dialog :deep(.el-dialog) {
-    width: 92% !important;
-    max-height: 85vh;
-  }
-  
-  .reply-dialog :deep(.el-dialog__body) {
-    padding: 16px 0;
-  }
-  
-  .reply-dialog :deep(.el-dialog__header) {
-    padding: 16px 20px;
-  }
-  
-  .reply-dialog :deep(.el-dialog__footer) {
-    padding: 12px 20px;
-  }
-  
-  .reply-dialog-content {
-    padding: 0 20px;
+  .review-actions :deep(.el-button) {
+    font-size: 14px;
+    height: 34px;
+    padding: 0 16px;
   }
 }
 
